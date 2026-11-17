@@ -16,8 +16,8 @@ export function friendlyError(error: unknown): string {
   if (text.includes("missing environment variable")) {
     return "The assistant is not fully set up yet. Please try again later.";
   }
-  if (text.includes("timeout") || text.includes("timed out") || text.includes("fetch failed")) {
-    return "The connection timed out. Please try again.";
+  if (text.includes("timeout") || text.includes("timed out") || text.includes("abort") || text.includes("did not respond") || text.includes("fetch failed")) {
+    return "That took too long, the AI service is slow right now. Please try again.";
   }
   return "Sorry, something went wrong on our side. Please try again in a moment.";
 }

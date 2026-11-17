@@ -15,6 +15,28 @@ function isBusyError(error: unknown) {
 const BUSY_COOLDOWN_MS = 60_000;
 const busyUntil = new Map<string, number>();
 
+// If a model has not started answering within this time, try the next one.
+const CONNECT_TIMEOUT_MS = 15_000;
+class ConnectTimeoutError extends Error {}
+
+type StreamParams = Parameters<ReturnType<typeof google>["doStream"]>[0];
+
+/** Starts a streaming call, giving up (and cancelling it) if it does not connect in time. */
+async function connectWithTimeout(modelName: string, params: StreamParams) {
+  const controller = new AbortController();
+  const outer = params.abortSignal;
+  outer?.addEventListener("abort", () => controller.abort(outer.reason), { once: true });
+  const timer = setTimeout(() => controller.abort(new ConnectTimeoutError(`${modelName} did not respond in time`)), CONNECT_TIMEOUT_MS);
+  try {
+    return await google(modelName).doStream({ ...params, abortSignal: controller.signal });
+  } catch (error) {
+    if (controller.signal.reason instanceof ConnectTimeoutError) throw controller.signal.reason;
+    throw error;
+  } finally {
+    clearTimeout(timer); // once connected, the stream may take as long as it needs
+  }
+}
+
 /**
  * The chat model used by the agent (LLM_MODEL in .env).
  * If LLM_FALLBACK_MODELS is set (comma-separated), a busy or rate-limited model
@@ -48,9 +70,9 @@ export function chatModel(onFallback?: (info: { from: string; to: string }) => v
         for (let i = 0; i < order.length; i++) {
           const name = order[i];
           try {
-            return await google(name).doStream(params);
+            return await connectWithTimeout(name, params);
           } catch (error) {
-            if (!isBusyError(error)) throw error;
+            if (!isBusyError(error) && !(error instanceof ConnectTimeoutError)) throw error;
             busyUntil.set(name, Date.now() + BUSY_COOLDOWN_MS);
             lastError = error;
             if (order[i + 1]) onFallback?.({ from: name, to: order[i + 1] });
@@ -109,6 +131,8 @@ export async function embedQuery(query: string): Promise<number[]> {
   const { embedding } = await embed({
     model,
     value: prefixed ? `task: search result | query: ${query}` : query,
+    maxRetries: 1,
+    abortSignal: AbortSignal.timeout(10_000),
     providerOptions: {
       google: {
         outputDimensionality: dimensions,

@@ -136,9 +136,12 @@ export function ChatWidget({ embedded = false }: { embedded?: boolean }) {
         {error && (
           <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
             {readableError(error)}
-            <button onClick={() => { clearError(); regenerate(); }} className="ml-2 font-semibold underline">
-              Try again
-            </button>
+            {/* Retrying doesn't help when the daily demo limit is reached. */}
+            {!readableError(error)?.includes("tomorrow") && (
+              <button onClick={() => { clearError(); regenerate(); }} className="ml-2 font-semibold underline">
+                Try again
+              </button>
+            )}
           </div>
         )}
       </div>

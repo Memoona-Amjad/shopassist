@@ -52,10 +52,12 @@ const scenarios: { name: string; turns: { say: string; expectTools?: string[]; c
   },
 ];
 
-async function send(chatId: string, history: UIMessage[]) {
+async function send(chatId: string, history: UIMessage[], fakeIp: string) {
   const res = await fetch(`${BASE}/api/chat`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    // A different (fake) IP per scenario so local tests don't use up the daily limit.
+    // On Vercel this header is set by the platform, so it cannot be faked there.
+    headers: { "content-type": "application/json", "x-forwarded-for": fakeIp },
     body: JSON.stringify({ id: chatId, messages: history, trigger: "submit-message" }),
   });
   if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
@@ -81,9 +83,10 @@ async function main() {
     console.log(`\n=== ${s.name}`);
     const chatId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const history: UIMessage[] = [];
+    const fakeIp = `198.51.100.${Math.floor(Math.random() * 250)}`;
     for (const turn of s.turns) {
       history.push({ id: crypto.randomUUID(), role: "user", parts: [{ type: "text", text: turn.say }] });
-      const assistant = await send(chatId, history);
+      const assistant = await send(chatId, history, fakeIp);
       history.push(assistant);
 
       const tools = assistant.parts.filter((p) => p.type.startsWith("tool-")).map((p) => {

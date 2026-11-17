@@ -97,7 +97,7 @@ export function createTools({ conversationId, messages }: { conversationId: stri
   }
 
   /** Loads an order and checks the last 4 phone digits. Never returns the phone. */
-  async function loadVerifiedOrder(orderId: number, phoneLast4: string) {
+  async function loadVerifiedOrder(orderId: number, phoneLast4: string | undefined) {
     if (failedVerifications(orderId) >= MAX_FAILED_VERIFICATIONS) {
       return {
         ok: false as const,
@@ -114,7 +114,7 @@ export function createTools({ conversationId, messages }: { conversationId: stri
     if (!order) {
       return { ok: false as const, result: { found: false, attempts, message: `No order #${orderId} exists. Ask the customer to double-check the number.` } };
     }
-    const digits = phoneLast4.replace(/\D/g, "");
+    const digits = (phoneLast4 ?? "").replace(/\D/g, "");
     // Missing digits are not a failed attempt: the agent simply has to ask.
     if (digits.length !== 4) {
       return {
@@ -216,7 +216,7 @@ export function createTools({ conversationId, messages }: { conversationId: stri
         "Never guess the digits: ask the customer if they did not give them.",
       inputSchema: z.object({
         orderId: z.number().int().describe("Order number, e.g. 1042"),
-        phoneLast4: z.string().describe("Last 4 digits of the customer's phone number"),
+        phoneLast4: z.string().optional().describe("Last 4 digits of the customer's phone number. Leave out if the customer has not given them; never guess."),
       }),
       execute: async ({ orderId, phoneLast4 }) => {
         const check = await loadVerifiedOrder(orderId, phoneLast4);
@@ -259,7 +259,7 @@ export function createTools({ conversationId, messages }: { conversationId: stri
         "call again with confirmed=true. Requires the last 4 digits of the phone number.",
       inputSchema: z.object({
         orderId: z.number().int().describe("Order number, e.g. 1037"),
-        phoneLast4: z.string().describe("Last 4 digits of the customer's phone number"),
+        phoneLast4: z.string().optional().describe("Last 4 digits of the customer's phone number. Leave out if the customer has not given them; never guess."),
         reason: z.string().describe("Why the customer wants to return it, in a few words"),
         confirmed: z.boolean().describe("true ONLY if the customer has already confirmed this exact return in their latest message"),
       }),
