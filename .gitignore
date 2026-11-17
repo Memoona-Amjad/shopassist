@@ -1,0 +1,38 @@
+# dependencies
+/node_modules
+.pnp
+.pnp.*
+
+# Python (not used, kept for safety)
+.venv/
+__pycache__/
+
+# Next.js / build outputs
+/.next/
+/out/
+/build
+/dist
+*.tsbuildinfo
+next-env.d.ts
+
+# testing
+/coverage
+
+# secrets: never commit real env files (but keep the example)
+.env
+.env.*
+!.env.example
+
+# Vercel
+.vercel
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+*.pem
+.claude/
