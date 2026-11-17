@@ -5,6 +5,7 @@
 // 4. Save the conversation so the admin page can show it.
 import {
   convertToModelMessages,
+  createIdGenerator,
   createUIMessageStreamResponse,
   isStepCount,
   streamText,
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
       stream: result.stream,
       tools,
       originalMessages: messages,
+      generateMessageId: createIdGenerator({ prefix: "msg", size: 16 }), // ids for saved replies
       sendReasoning: true,
       messageMetadata: ({ part }) => (part.type === "finish" ? { fallbacks } : undefined),
       onError: (error) => friendlyError(error),
