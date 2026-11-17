@@ -93,7 +93,7 @@ export async function searchPolicyChunks(query: string, limit = 4): Promise<Poli
   const { data, error } = await db().rpc("match_doc_chunks", {
     query_embedding: JSON.stringify(embedding),
     match_count: limit,
-    min_similarity: Number(process.env.RAG_MIN_SIMILARITY ?? 0.5),
+    min_similarity: Number(process.env.RAG_MIN_SIMILARITY ?? 0.6),
   });
   if (error) throw new Error(`Policy search failed: ${error.message}`);
   return (data ?? []).map((r: PolicyHit) => ({
