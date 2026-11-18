@@ -38,8 +38,13 @@ await row("LL-103").getByRole("button", { name: "Mark sold out" }).click();
 await row("LL-103").getByText("Marked as sold out").waitFor({ timeout: 15_000 });
 console.log("✓ LL-103 marked sold out");
 
-// 3. Store reflects the changes.
-await page.goto(base, { waitUntil: "load" });
+// 3. Store reflects the changes (on Vercel the cache refresh can take a second or two).
+for (let attempt = 0; attempt < 6; attempt++) {
+  await page.goto(base, { waitUntil: "load" });
+  const ready = await page.locator("article", { hasText: "Chambeli Everyday Lawn Suit" }).getByText("Sold out").count();
+  if (ready) break;
+  await page.waitForTimeout(2000);
+}
 await page.locator("#shop").scrollIntoViewIfNeeded();
 const gulnar = page.locator("article", { hasText: "Gulnar Printed Lawn Suit" });
 const hasPhoto = await gulnar.locator("img").count();
