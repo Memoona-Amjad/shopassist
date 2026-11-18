@@ -2,7 +2,7 @@
 
 **ShopAssist checks orders, starts returns, finds products and hands angry customers to a human. It shows every step it takes on screen.**
 
-**▶ Live demo:** _coming soon (link added after deployment)_ · click **“Try the AI support agent”**, no sign-up or data needed.
+**▶ Live demo: https://shopassist-one.vercel.app** · click **“Try the AI support agent”**, no sign-up or data needed.
 
 | The agent handling a return, step by step | Owner dashboard |
 | --- | --- |
