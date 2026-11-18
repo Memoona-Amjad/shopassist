@@ -134,7 +134,6 @@ src/app/(store)/policies/     Help centre pages (the same docs the agent searche
 public/widget.js              One-line embed for other websites
 supabase/migrations/          Database schema (tables, pgvector, search function)
 data/policies/                The store's policy documents (markdown)
-docs/HOW_IT_WORKS.md          Plain-English walkthrough + likely interview questions
 ```
 
 ## Limitations and next steps
