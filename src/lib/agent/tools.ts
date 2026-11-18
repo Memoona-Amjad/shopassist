@@ -57,6 +57,13 @@ const formatDate = (iso: string | null) =>
 
 const firstName = (name: string) => name.split(" ")[0];
 
+/** The 5 core policies have their own page on the store (e.g. /policies/returns). */
+const POLICY_PAGES = ["shipping", "returns", "sizing", "faq", "contact"];
+function policyLink(source: string) {
+  const slug = source.replace(/\.md$/, "");
+  return POLICY_PAGES.includes(slug) ? `/policies/${slug}` : null;
+}
+
 /** Looks through earlier tool results in this chat for a given tool + order. */
 function previousToolOutputs(messages: UIMessage[], toolName: string, orderId: number) {
   const outputs: Record<string, unknown>[] = [];
@@ -146,7 +153,9 @@ export function createTools({ conversationId, messages }: { conversationId: stri
           found: true,
           attempts,
           sources: [...new Set(hits.map((h) => h.source))],
-          chunks: hits.map((h) => ({ source: h.source, section: h.heading, text: h.content, score: h.similarity })),
+          // Customer-facing citation: the document title, plus a link if the store has a page for it.
+          documents: [...new Map(hits.map((h) => [h.source, { title: h.title, link: policyLink(h.source) }])).values()],
+          chunks: hits.map((h) => ({ source: h.source, document: h.title, section: h.heading, text: h.content, score: h.similarity })),
         };
       },
     }),

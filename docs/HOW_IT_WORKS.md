@@ -14,7 +14,7 @@ It works like a new support employee with a rule book and access to a few system
 - It uses it, reads the result, and decides again if needed.
 - Then it replies.
 
-Every action shows up on screen as a small **chip**, so anyone watching can see it is really doing work, not just chatting.
+Above every answer, one short line shows what it did (e.g. *"✓ Checked order #1042 · On the way"*). Tap **see steps** to open each step with the exact data sent and received. So anyone watching can see it is really doing work, not just chatting, and customers see it in plain language.
 
 ## 2. What happens when a customer sends a message
 
@@ -29,7 +29,7 @@ Example: *"Where is my order #1042? Phone ends 4821"*
 4. Gemini replies *"I want to call `getOrderStatus` with orderId 1042, phoneLast4 4821"*.
 5. **Our code runs the tool**: it loads the order from the database and checks that the phone ends in 4821. If the digits are wrong, it refuses and shares nothing.
 6. The tool result goes back to Gemini, which writes the answer: *"Hi Ayesha, your order shipped via Leopards…"*
-7. All of this is **streamed** to the widget live: the chip appears first, then the text types out.
+7. All of this is **streamed** to the widget live: a spinner shows the current step ("Looking up order #1042…"), then the answer types out.
 8. When the reply is finished, the whole conversation, including every tool call, is **saved** so the owner can replay it in `/admin`.
 
 The loop can repeat up to **6 steps** per message. For example: search the policy → check the order → answer.
@@ -56,7 +56,7 @@ RAG stands for *Retrieval-Augmented Generation*: look up the facts first, then w
 
 - **"The AI decides what to do, the code decides what is allowed."** Prompts can be ignored or tricked, so every important rule (phone check, 14-day window, ask before acting) is enforced **inside the tool code**. The prompt explains the rules; the code enforces them.
 - **Ask before acting.** Starting a return changes data, so it is a two-step action: first *"you're eligible, shall I go ahead?"*, then the real action only after the customer says yes. The server also checks that the confirmation question was asked in an earlier message.
-- **Show the work.** Tool chips, "thinking" notes and fallback notes make the agent's behaviour visible. This builds trust and makes debugging easy.
+- **Show the work, in plain language.** The steps line uses customer words ("Checked our size guide"), not developer words ("Read sizing.md"). The full details (tool inputs and outputs, thinking notes, retries) are one tap away. This builds trust and makes debugging easy.
 - **Easy to swap the AI provider.** Only `src/lib/llm.ts` knows we use Gemini.
 - **Cheap to run.** Gemini's free tier, Supabase's free tier and Vercel's free tier mean the demo costs **Rs 0 per month**.
 - **Simple, readable code.** Each file does one job, with short comments.
@@ -65,10 +65,10 @@ RAG stands for *Retrieval-Augmented Generation*: look up the facts first, then w
 
 | Failure | What the agent does |
 | --- | --- |
-| Gemini's main model is overloaded (error 503) or out of quota (429) | Switches to a **backup model** straight away (list in `LLM_FALLBACK_MODELS`), skips the busy model for 60 seconds, and shows a 🔁 chip: *"Main AI model busy, retried with …"* |
+| Gemini's main model is overloaded (error 503) or out of quota (429) | Switches to a **backup model** straight away (list in `LLM_FALLBACK_MODELS`), skips the busy model for 60 seconds, and notes it in the steps: *"Our main AI model was busy, so a backup model answered."* |
 | A model doesn't respond within 15 seconds | Treated as busy, so the next model is tried |
 | The whole reply takes too long | Stopped after 55 seconds (or 20 seconds of silence) with a friendly *"please try again"* message |
-| A database call inside a tool fails | Retried up to **3 times** with a short wait. The chip shows *"· retried"* |
+| A database call inside a tool fails | Retried up to **3 times** with a short wait. The step shows *"· retried"* |
 | Wrong phone digits | Order details are hidden and the agent asks again. After 3 tries the order is locked and a human is offered |
 | The policy docs don't cover the question | The agent says it couldn't find it and offers a human. It never invents a policy |
 | A visitor sends too many messages | Friendly message: *"You've used all 10 free demo messages for today"* |
@@ -101,7 +101,7 @@ Visitors can click any product and order it (size, quantity, name, phone, city, 
 ## 8. How to demo it in 3 minutes
 
 1. Open the live site and click **"Try the AI support agent"**.
-2. **Track an order:** *"Where is my order #1042? Phone ends 4821"*. Point at the 🔎 chip, then click it to show the real tool input and output.
+2. **Track an order:** *"Where is my order #1042? Phone ends 4821"*. Point at the line above the answer (*"✓ Checked order #1042 · On the way"*), then tap **see steps** and open the step to show the real tool input and output.
 3. **Return:** *"I want to return order #1037"*. It asks for the phone digits. Reply *"5590, the colour didn't suit me"*. It checks the rules and **asks for confirmation**. Say *"yes"* and you get ↩️ *Return started · RET-…*
 4. **Policy:** *"What is your return policy?"*. The answer cites *returns.md*.
 5. **Escalate:** *"This is the third time I'm asking, I want a human"*. You get 🧑 a ticket.
@@ -113,7 +113,7 @@ Visitors can click any product and order it (size, quantity, name, phone, city, 
 ## 9. Likely interview questions (with short answers)
 
 **1. What makes this "agentic" and not just a chatbot?**
-It decides which actions to take, calls real tools that read and change data, looks at the results, and can take several steps before answering. The chips on screen show each decision and action.
+It decides which actions to take, calls real tools that read and change data, looks at the results, and can take several steps before answering. The steps line above each answer shows each decision and action.
 
 **2. How do you stop the AI from making things up?**
 Policy answers must come from retrieved document text with a cited source. If nothing relevant is found, it says so and offers a human. Order and product facts come only from the database through tools.
@@ -151,7 +151,8 @@ A real hand-off (WhatsApp/email/helpdesk notification for escalations), OTP veri
 | The agent's instructions | `src/lib/agent/prompt.ts` |
 | Gemini, fallback models, embeddings | `src/lib/llm.ts` |
 | Chunking and vector search | `src/lib/rag.ts` and `supabase/migrations/001_init.sql` |
-| The chat widget and chips | `src/components/chat/ChatWidget.tsx`, `src/lib/agent/chip-labels.ts` |
+| The chat widget and steps line | `src/components/chat/ChatWidget.tsx`, `src/lib/agent/chip-labels.ts` |
+| Store pages (header, footer, help centre) | `src/components/site/`, `src/app/(store)/` |
 | Rate limiting | `src/lib/rate-limit.ts` |
 | Admin dashboard | `src/app/admin/page.tsx`, `src/app/admin/actions.ts` |
 | Ordering | `src/components/store/OrderDialog.tsx`, `src/lib/orders.ts`, `src/app/api/orders/route.ts` |

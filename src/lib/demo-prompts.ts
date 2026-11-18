@@ -19,3 +19,8 @@ export const SAMPLE_ORDERS = [
 export function askShopAssist(text: string) {
   window.dispatchEvent(new CustomEvent("shopassist:ask", { detail: text }));
 }
+
+/** Opens the chat widget without sending anything. */
+export function openShopAssist() {
+  window.dispatchEvent(new CustomEvent("shopassist:ask", { detail: "" }));
+}

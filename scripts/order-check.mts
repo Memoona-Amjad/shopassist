@@ -14,7 +14,7 @@ page.on("pageerror", (e) => errors.push(e.message));
 page.on("console", (m) => m.type() === "error" && errors.push(m.text().slice(0, 200)));
 
 await page.goto(base, { waitUntil: "load" });
-await page.getByRole("button", { name: /chat with us/i }).waitFor(); // page is interactive
+await page.getByRole("button", { name: /open chat/i }).waitFor(); // page is interactive
 
 // Filter to kurtas and click a product card.
 await page.getByRole("button", { name: /^Kurtas \d+$/ }).click();

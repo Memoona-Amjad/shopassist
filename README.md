@@ -6,7 +6,7 @@
 
 | The agent handling a return, step by step | Owner dashboard |
 | --- | --- |
-| <img src="docs/images/chat-return-flow.png" width="330" alt="Chat showing tool-call chips for a return"> | <img src="docs/images/admin-dashboard.png" width="520" alt="Admin dashboard with stats, escalations and tool usage"> |
+| <img src="docs/images/chat-return-flow.png" width="330" alt="Chat showing the agent steps for a return"> | <img src="docs/images/admin-dashboard.png" width="520" alt="Admin dashboard with stats, escalations and tool usage"> |
 
 > 🎬 _Demo GIF placeholder: a 30-second screen recording of the five demo prompts will go here._
 
@@ -27,7 +27,7 @@ For every customer message, ShopAssist runs a small **agent loop** (up to 6 step
 3. **Starts a return** after checking the rules in code (order delivered, within 14 days, not already returned). It **asks the customer to confirm before acting**.
 4. **Finds products** by keyword, price and size.
 5. **Hands over to a human** when the customer is upset, asks for a person, or the agent is unsure. It saves a ticket with a short summary for the team.
-6. **Shows its work**: each tool call appears in the chat as a chip (🔎 *Checked order #1042*, ↩️ *Return started*, 🧑 *Sent to a human*). Click a chip to see the exact input and output. Model fallbacks (🔁) are shown too.
+6. **Shows its work** in customer-friendly language: above every answer is one line saying what the agent did (*✓ Checked order #1042 · On the way*, *● Return eligible · waiting for your OK*, *✓ Passed to our team · ticket ESC-6*), with a spinner while it works. Tap **see steps** to open each step with the exact tool input and output, any reasoning notes, and automatic retries.
 
 Visitors can also **order any product** from the store page: search, filter by category, sort by price, click a product, then choose size, quantity and address, and pay cash on delivery. The order is created in the database and priced on the server, stock goes down automatically (two buyers can never get the last unit), and the confirmation offers **"Track it with ShopAssist"**, so the agent can immediately look up the order you just placed.
 
@@ -128,7 +128,9 @@ src/lib/agent/tools.ts        The 5 tools and the business rules they enforce
 src/lib/agent/prompt.ts       The agent's instructions
 src/lib/llm.ts                The only file that knows about Gemini (models, fallback, embeddings)
 src/lib/rag.ts                Chunking, embedding and vector search for policy docs
-src/components/chat/          Chat widget and tool-call chips
+src/components/chat/          Chat widget and the "what the agent did" steps
+src/components/site/          Store header, footer and navigation
+src/app/(store)/policies/     Help centre pages (the same docs the agent searches)
 public/widget.js              One-line embed for other websites
 supabase/migrations/          Database schema (tables, pgvector, search function)
 data/policies/                The store's policy documents (markdown)

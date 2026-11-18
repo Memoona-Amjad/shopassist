@@ -19,7 +19,7 @@ page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 await page.goto(base, { waitUntil: "networkidle" });
 await page.screenshot({ path: `${out}/home.png` });
 await page.screenshot({ path: `${out}/home-full.png`, fullPage: true });
-await page.getByRole("button", { name: /chat with us/i }).first().click();
+await page.getByRole("button", { name: /open chat/i }).first().click();
 await page.screenshot({ path: `${out}/widget-open.png` });
 
 for (const i of indexes.length ? indexes : [0]) {

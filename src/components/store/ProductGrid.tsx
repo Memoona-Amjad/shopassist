@@ -1,7 +1,7 @@
 "use client";
 // The shop: search, category filters, sorting and the product grid.
 // Clicking a product opens the product view with the order form.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Product } from "@/lib/seed-data";
 import { ProductCard } from "./ProductCard";
 import { OrderDialog } from "./OrderDialog";
@@ -24,6 +24,21 @@ export function ProductGrid({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<Sort>("featured");
   const [open, setOpen] = useState<Product | null>(null);
+
+  // Header/footer category links: "/?c=kurta#shop" from other pages, or a browser event on this page.
+  useEffect(() => {
+    const pick = (c: string | null) => {
+      if (c && FILTERS.some((f) => f.category === c)) {
+        setCategory(c as Category);
+        setQuery("");
+      }
+    };
+    const onEvent = (e: Event) => pick(String((e as CustomEvent).detail));
+    window.addEventListener("shop:category", onEvent);
+    const fromUrl = new URLSearchParams(window.location.search).get("c");
+    if (fromUrl) queueMicrotask(() => pick(fromUrl)); // after the first render
+    return () => window.removeEventListener("shop:category", onEvent);
+  }, []);
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
