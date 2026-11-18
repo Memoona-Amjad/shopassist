@@ -69,9 +69,10 @@ async function AdminContent() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         <Stat label="Conversations" value={data.stats.conversations} />
         <Stat label="Tool calls" value={data.stats.toolCalls} />
+        <Stat label="Orders placed on the site" value={data.stats.ordersPlaced} />
         <Stat label="Returns started" value={data.stats.returnsStarted} />
         <Stat label="Open escalations" value={data.stats.openEscalations} highlight={data.stats.openEscalations > 0} />
         <Stat label="Chats sent to a human" value={`${data.stats.escalationRate}%`} />
@@ -124,6 +125,22 @@ async function AdminContent() {
                 </div>
               ))}
             </div>
+          </Card>
+
+          {/* Orders placed on the store page */}
+          <Card title="🛒 Orders placed on the site" subtitle="Cash on delivery · cleared by the nightly demo reset">
+            {data.siteOrders.length === 0 && <Empty>No orders yet. Click a product on the store page to place one.</Empty>}
+            <ul className="space-y-1.5 text-sm">
+              {data.siteOrders.map((o) => (
+                <li key={o.id} className="flex justify-between gap-2">
+                  <span>
+                    <span className="font-mono font-semibold">#{o.id}</span> · {o.customer_name}, {o.city} ·{" "}
+                    <span className="text-stone-500">{o.items.map((i) => `${i.qty}× ${i.name} (${i.size})`).join(", ")}</span>
+                  </span>
+                  <span className="whitespace-nowrap text-xs text-stone-500">Rs {o.total.toLocaleString("en-US")}</span>
+                </li>
+              ))}
+            </ul>
           </Card>
 
           {/* Returns */}

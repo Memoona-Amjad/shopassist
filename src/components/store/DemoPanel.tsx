@@ -48,8 +48,8 @@ export function DemoPanel() {
             <tbody className="divide-y divide-stone-200">
               {SAMPLE_ORDERS.map((o) => (
                 <tr key={o.id}>
-                  <td className="py-2 font-mono font-semibold text-[var(--brand)]">#{o.id}</td>
-                  <td className="py-2 font-mono">{o.phoneLast4}</td>
+                  <td className="py-2 pr-3 font-mono font-semibold text-[var(--brand)]">#{o.id}</td>
+                  <td className="py-2 pr-3 font-mono">{o.phoneLast4}</td>
                   <td className="py-2 text-xs text-stone-600">{o.note}</td>
                 </tr>
               ))}

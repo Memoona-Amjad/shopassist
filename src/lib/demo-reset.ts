@@ -3,6 +3,7 @@
 // and order #1037 can always be returned in the demo).
 import { db } from "./supabase";
 import { PRODUCTS, buildOrders, orderToRow } from "./seed-data";
+import { LAST_SEED_ORDER_ID } from "./orders";
 
 export async function resetStoreData() {
   const supabase = db();
@@ -13,6 +14,10 @@ export async function resetStoreData() {
   // Returns reference orders, so clear them first.
   const { error: returnsError } = await supabase.from("returns").delete().gte("id", 0);
   if (returnsError) throw new Error(`Returns: ${returnsError.message}`);
+
+  // Remove orders that visitors placed from the store page (numbers above the seed orders).
+  const { error: visitorError } = await supabase.from("orders").delete().gt("id", LAST_SEED_ORDER_ID);
+  if (visitorError) throw new Error(`Visitor orders: ${visitorError.message}`);
 
   const rows = buildOrders().map((o) => orderToRow(o));
   const { error: orderError } = await supabase.from("orders").upsert(rows);

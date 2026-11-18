@@ -74,27 +74,38 @@ RAG stands for *Retrieval-Augmented Generation*: look up the facts first, then w
 | A visitor sends too many messages | Friendly message: *"You've used all 10 free demo messages for today"* |
 | Any unexpected error | The customer sees a short friendly sentence (never a stack trace). The real error is logged on the server |
 
-## 6. The owner dashboard (`/admin`)
+## 6. Ordering from the store page
+
+Visitors can click any product and order it (size, quantity, name, phone, city, address, cash on delivery).
+- The browser only sends **which product and how many**. The **server** looks up the price and stock in the database, adds shipping (Rs 250 below Rs 5,000, otherwise free), and refuses sold-out items, wrong sizes, invalid phone numbers and cash-on-delivery orders above Rs 25,000.
+- The order gets the next order number (e.g. #1043) with status *processing*.
+- The confirmation screen has a **"Track it with ShopAssist"** button. It opens the chat with *"Where is my order #1043? Phone ends 4321"*, and the agent finds the order you just placed. This is a nice way to show the agent working on *live* data, not only the seed data.
+- Limits: 5 orders per visitor per day. All visitor orders are deleted by the nightly demo reset.
+- The agent itself does **not** place orders. If a customer asks to buy, it tells them to click the product. Taking payment is a step we keep with the customer, on purpose.
+
+## 7. The owner dashboard (`/admin`)
 
 - **Login** with the password from the environment settings. The browser gets a signed, secure cookie, never the password.
-- **Stats:** conversations, tool calls, returns started, open escalations, % of chats sent to a human.
+- **Stats:** conversations, tool calls, orders placed on the site, returns started, open escalations, % of chats sent to a human.
+- **Orders placed on the site:** the latest visitor orders.
 - **Escalations** with the agent's summary, and a "mark resolved" button.
 - **Conversation logs:** open any chat to replay every message and tool call.
 - **Upload a policy** (.md/.txt or pasted text). It is chunked, embedded and usable by the agent immediately.
 - **Reset demo orders** button, and the **one-line `<script>`** to add the chat to any website.
 
-## 7. How to demo it in 3 minutes
+## 8. How to demo it in 3 minutes
 
 1. Open the live site and click **"Try the AI support agent"**.
 2. **Track an order:** *"Where is my order #1042? Phone ends 4821"*. Point at the 🔎 chip, then click it to show the real tool input and output.
 3. **Return:** *"I want to return order #1037"*. It asks for the phone digits. Reply *"5590, the colour didn't suit me"*. It checks the rules and **asks for confirmation**. Say *"yes"* and you get ↩️ *Return started · RET-…*
 4. **Policy:** *"What is your return policy?"*. The answer cites *returns.md*.
 5. **Escalate:** *"This is the third time I'm asking, I want a human"*. You get 🧑 a ticket.
-6. Open **/admin** and show the same conversations, the escalation summary and the stats.
+6. **Order:** click any product, place an order, then click **"Track it with ShopAssist"**. The agent finds the brand-new order.
+7. Open **/admin** and show the same conversations, the escalation summary, the new order and the stats.
 
 **Tip:** press **Reset demo orders** on the dashboard right before the call, so #1037 can be returned again.
 
-## 8. Likely interview questions (with short answers)
+## 9. Likely interview questions (with short answers)
 
 **1. What makes this "agentic" and not just a chatbot?**
 It decides which actions to take, calls real tools that read and change data, looks at the results, and can take several steps before answering. The chips on screen show each decision and action.
@@ -126,7 +137,7 @@ One free database holds the store data, the logs and the vectors, so there are f
 **10. What would you build next?**
 A real hand-off (WhatsApp/email/helpdesk notification for escalations), OTP verification, Urdu/Roman-Urdu tuning, and analytics on the most common questions so the store can improve its policies.
 
-## 9. Where to find things in the code
+## 10. Where to find things in the code
 
 | You want to explain… | Open this file |
 | --- | --- |
@@ -138,4 +149,5 @@ A real hand-off (WhatsApp/email/helpdesk notification for escalations), OTP veri
 | The chat widget and chips | `src/components/chat/ChatWidget.tsx`, `src/lib/agent/chip-labels.ts` |
 | Rate limiting | `src/lib/rate-limit.ts` |
 | Admin dashboard | `src/app/admin/page.tsx`, `src/app/admin/actions.ts` |
+| Ordering | `src/components/store/OrderDialog.tsx`, `src/lib/orders.ts`, `src/app/api/orders/route.ts` |
 | Demo data | `src/lib/seed-data.ts`, `data/policies/*.md` |

@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { DemoPanel } from "@/components/store/DemoPanel";
-import { ProductCard } from "@/components/store/ProductCard";
+import { ProductGrid } from "@/components/store/ProductGrid";
 import { PRODUCTS } from "@/lib/seed-data";
 
 // The demo storefront. Products come from the same seed catalogue that is in the
 // database, so the page is static, fast and never breaks if the database is slow.
-const FEATURED = PRODUCTS.filter((p) => ["lawn", "kurta", "formal"].includes(p.category)).slice(0, 12);
+// Orders placed here are checked and priced on the server (/api/orders).
 
 const TOOLS = [
   { icon: "📄", name: "searchPolicies", text: "Finds the answer in the store's own policy docs (RAG) and cites the source." },
@@ -83,18 +83,8 @@ export default function Home() {
 
       <DemoPanel />
 
-      {/* Products */}
-      <section id="shop" className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-serif text-3xl text-stone-900">New arrivals</h2>
-          <span className="text-sm text-stone-500">{PRODUCTS.length} products in the demo catalogue</span>
-        </div>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {FEATURED.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      {/* Products (click one to order) */}
+      <ProductGrid />
 
       {/* How it works */}
       <section id="how" className="border-t border-stone-200 bg-[var(--cream)]">

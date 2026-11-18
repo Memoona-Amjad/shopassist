@@ -6,6 +6,7 @@ import { z } from "zod";
 import { db } from "../supabase";
 import { searchPolicyChunks } from "../rag";
 import { withRetry } from "./retry";
+import { deliveryWindow } from "../shipping";
 
 const RETURN_WINDOW_DAYS = 14; // from data/policies/returns.md
 const MAX_FAILED_VERIFICATIONS = 3;
@@ -54,16 +55,6 @@ const formatDate = (iso: string | null) =>
   iso ? new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }) : null;
 
 const firstName = (name: string) => name.split(" ")[0];
-
-// Delivery estimate from the shipping policy (big cities are faster).
-const FAST_CITIES = ["karachi", "lahore", "islamabad", "rawalpindi"];
-const MAJOR_CITIES = ["faisalabad", "multan", "peshawar", "quetta", "hyderabad", "sialkot", "gujranwala"];
-function deliveryWindow(city: string): [number, number] {
-  const c = city.toLowerCase();
-  if (FAST_CITIES.includes(c)) return [2, 3];
-  if (MAJOR_CITIES.includes(c)) return [3, 5];
-  return [5, 7];
-}
 
 /** Looks through earlier tool results in this chat for a given tool + order. */
 function previousToolOutputs(messages: UIMessage[], toolName: string, orderId: number) {

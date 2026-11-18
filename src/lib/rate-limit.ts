@@ -14,11 +14,18 @@ function hashIp(ip: string) {
 
 export type RateLimitResult = { allowed: boolean; used: number; limit: number };
 
-/** Counts one chat run for this IP and says whether it is still allowed today. */
-export async function checkRateLimit(req: Request): Promise<RateLimitResult> {
-  const limit = Number(process.env.RATE_LIMIT_PER_DAY) || 10;
+/**
+ * Counts one action for this IP and says whether it is still allowed today.
+ * Each "bucket" has its own counter: "chat" (agent runs) and "order" (demo orders).
+ */
+export async function checkRateLimit(
+  req: Request,
+  { bucket = "chat", limit = Number(process.env.RATE_LIMIT_PER_DAY) || 10 }: { bucket?: string; limit?: number } = {},
+): Promise<RateLimitResult> {
   const day = new Date().toISOString().slice(0, 10); // UTC date, e.g. 2026-11-17
-  const { data, error } = await db().rpc("bump_rate_limit", { p_ip_hash: hashIp(clientIp(req)), p_day: day });
+  // The chat bucket keeps the plain IP hash so existing counters stay valid.
+  const key = bucket === "chat" ? hashIp(clientIp(req)) : hashIp(`${bucket}:${clientIp(req)}`);
+  const { data, error } = await db().rpc("bump_rate_limit", { p_ip_hash: key, p_day: day });
   if (error) {
     // If the counter itself fails, let the chat through rather than block real users.
     console.error("Rate limit check failed:", error.message);
