@@ -1,6 +1,8 @@
 // POST /api/orders: place a demo order (cash on delivery) from the store page.
 import { OrderError, orderInputSchema, placeOrder } from "@/lib/orders";
+import { revalidateTag } from "next/cache";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { PRODUCTS_TAG } from "@/lib/products";
 
 const ORDERS_PER_DAY = 5; // per visitor IP, keeps the demo database tidy
 
@@ -17,7 +19,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    return Response.json(await placeOrder(parsed.data));
+    const order = await placeOrder(parsed.data);
+    revalidateTag(PRODUCTS_TAG, "max"); // stock changed: refresh the store in the background
+    return Response.json(order);
   } catch (error) {
     if (error instanceof OrderError) return Response.json({ error: error.message }, { status: 400 });
     console.error("Order failed:", error);

@@ -32,3 +32,13 @@ body {
 .chat-md strong { font-weight: 600; }
 .chat-md a { color: var(--brand); text-decoration: underline; }
 .chat-md code { font-size: 0.8em; background: #f5f5f4; padding: 0 0.25rem; border-radius: 0.25rem; }
+
+/* Gentle open animation for dialogs */
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modal-in { from { opacity: 0; transform: translateY(16px) scale(0.98); } to { opacity: 1; transform: none; } }
+.fade-in { animation: fade-in 180ms ease-out; }
+.modal-in { animation: modal-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .modal-in { animation: none; }
+  * { transition-duration: 0ms !important; }
+}

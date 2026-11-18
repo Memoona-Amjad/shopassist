@@ -38,6 +38,7 @@ type ProductRow = {
   colors: string[];
   description: string;
   in_stock: boolean;
+  stock: number;
 };
 
 // ---------- small helpers ----------
@@ -184,7 +185,7 @@ export function createTools({ conversationId, messages }: { conversationId: stri
         const best = Math.max(0, ...scored.map((x) => x.score));
         const matches = scored
           .filter(({ score }) => words.length === 0 || (score > 0 && score > best / 2))
-          .sort((a, b) => b.score - a.score || Number(b.p.in_stock) - Number(a.p.in_stock) || a.p.price - b.p.price)
+          .sort((a, b) => b.score - a.score || Number(b.p.stock > 0) - Number(a.p.stock > 0) || a.p.price - b.p.price)
           .slice(0, 6)
           .map(({ p }) => ({
             id: p.id,
@@ -193,7 +194,8 @@ export function createTools({ conversationId, messages }: { conversationId: stri
             fabric: p.fabric,
             sizes: p.sizes,
             colors: p.colors,
-            inStock: p.in_stock,
+            inStock: p.in_stock && p.stock > 0,
+            ...(p.stock > 0 && p.stock <= 5 ? { onlyLeft: p.stock } : {}),
             description: p.description,
           }));
 

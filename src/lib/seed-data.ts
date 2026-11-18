@@ -13,12 +13,14 @@ export type Product = {
   colors: string[];
   description: string;
   in_stock: boolean;
+  stock: number; // units left (in_stock = stock > 0)
+  image_url?: string | null; // photo uploaded by the owner; null = CSS swatch
 };
 
 const STITCHED = ["XS", "S", "M", "L", "XL"];
 const UNSTITCHED = ["Unstitched"];
 
-export const PRODUCTS: Product[] = [
+const CATALOGUE: Omit<Product, "stock">[] = [
   // ---- Lawn (unstitched 3-piece suits) ----
   { id: "LL-101", name: "Gulnar Printed Lawn Suit (3-piece)", category: "lawn", fabric: "Cotton lawn", price: 4290, sizes: UNSTITCHED, colors: ["coral", "white"], description: "Coral floral print shirt with a chiffon dupatta and dyed trouser fabric.", in_stock: true },
   { id: "LL-102", name: "Neelam Embroidered Lawn Suit (3-piece)", category: "lawn", fabric: "Cotton lawn", price: 6490, sizes: UNSTITCHED, colors: ["blue"], description: "Indigo lawn with an embroidered neckline and a printed lawn dupatta.", in_stock: true },
@@ -61,6 +63,14 @@ export const PRODUCTS: Product[] = [
   { id: "LL-602", name: "Girls Lawn Kurta Shalwar Set", category: "kids", fabric: "Cotton lawn", price: 2290, sizes: ["4-5Y", "6-7Y", "8-9Y"], colors: ["pink"], description: "Two-piece lawn set for girls.", in_stock: true },
   { id: "LL-603", name: "Boys Cotton Kurta Pajama", category: "kids", fabric: "Cotton", price: 2490, sizes: ["2-3Y", "4-5Y", "6-7Y", "8-9Y"], colors: ["white", "sky blue"], description: "Festive cotton kurta pajama for boys.", in_stock: true },
 ];
+
+// A few products are deliberately low on stock so "Only N left" shows in the demo.
+const LOW_STOCK: Record<string, number> = { "LL-105": 3, "LL-110": 2, "LL-301": 4, "LL-402": 1 };
+
+export const PRODUCTS: Product[] = CATALOGUE.map((p, i) => ({
+  ...p,
+  stock: !p.in_stock ? 0 : (LOW_STOCK[p.id] ?? 12 + ((i * 7) % 30)),
+}));
 
 // ---------------- Orders ----------------
 

@@ -8,7 +8,8 @@ import { LAST_SEED_ORDER_ID } from "./orders";
 export async function resetStoreData() {
   const supabase = db();
 
-  const { error: productError } = await supabase.from("products").upsert(PRODUCTS);
+  // Add any missing products, but never overwrite the owner's stock or photos.
+  const { error: productError } = await supabase.from("products").upsert(PRODUCTS, { onConflict: "id", ignoreDuplicates: true });
   if (productError) throw new Error(`Products: ${productError.message}`);
 
   // Returns reference orders, so clear them first.

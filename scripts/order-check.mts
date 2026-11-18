@@ -17,23 +17,23 @@ await page.goto(base, { waitUntil: "load" });
 await page.getByRole("button", { name: /chat with us/i }).waitFor(); // page is interactive
 
 // Filter to kurtas and click a product card.
-await page.getByRole("button", { name: "Kurtas", exact: true }).click();
-await page.getByRole("button", { name: "Order Ayesha A-line Lawn Kurta" }).click();
+await page.getByRole("button", { name: /^Kurtas \d+$/ }).click();
+await page.getByRole("button", { name: "View Ayesha A-line Lawn Kurta" }).click();
 const dialog = page.getByRole("dialog");
 await dialog.waitFor();
 console.log("✓ clicking a product opens the order form");
 
 // Try to submit without a size -> friendly error.
-await dialog.getByPlaceholder("Full name").fill("Sara Ahmed");
-await dialog.getByPlaceholder(/Mobile/).fill("0321 7654321");
-await dialog.locator("select").selectOption("Karachi");
-await dialog.getByPlaceholder("Address").fill("House 12, Block 5, Clifton");
+await dialog.getByLabel("Full name").fill("Sara Ahmed");
+await dialog.getByLabel("Mobile number").fill("0321 7654321");
+await dialog.getByLabel("City").selectOption("Karachi");
+await dialog.getByLabel("Address").fill("House 12, Block 5, Clifton");
 await dialog.getByRole("button", { name: /Place order/ }).click();
 await dialog.getByText("Please choose a size.").waitFor();
 console.log("✓ missing size is caught");
 
 await dialog.getByRole("button", { name: "M", exact: true }).click();
-await dialog.getByRole("button", { name: "+" }).click(); // qty 2 -> Rs 4,980 + shipping
+await dialog.getByRole("button", { name: "More" }).click(); // qty 2 -> Rs 4,980 + shipping
 await page.screenshot({ path: `${out}/order-form.png` });
 await dialog.getByRole("button", { name: /Place order/ }).click();
 await dialog.getByText(/Order #\d+ placed!/).waitFor({ timeout: 20_000 });

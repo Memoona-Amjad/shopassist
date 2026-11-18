@@ -29,9 +29,9 @@ For every customer message, ShopAssist runs a small **agent loop** (up to 6 step
 5. **Hands over to a human** when the customer is upset, asks for a person, or the agent is unsure. It saves a ticket with a short summary for the team.
 6. **Shows its work**: each tool call appears in the chat as a chip (🔎 *Checked order #1042*, ↩️ *Return started*, 🧑 *Sent to a human*). Click a chip to see the exact input and output. Model fallbacks (🔁) are shown too.
 
-Visitors can also **order any product** from the store page (click a product → size, quantity, address → cash on delivery). The order is created in the database and priced on the server, and the confirmation offers **"Track it with ShopAssist"**, so the agent can immediately look up the order you just placed.
+Visitors can also **order any product** from the store page: search, filter by category, sort by price, click a product, then choose size, quantity and address, and pay cash on delivery. The order is created in the database and priced on the server, stock goes down automatically (two buyers can never get the last unit), and the confirmation offers **"Track it with ShopAssist"**, so the agent can immediately look up the order you just placed.
 
-The store owner gets a password-protected **dashboard** at `/admin`. It shows stats, conversation replays with every tool call, escalations, orders placed on the site, and returns. The owner can upload a new policy document, which the agent can use immediately, and copy a **one-line `<script>` embed** for any website.
+The store owner gets a password-protected **dashboard** at `/admin`. It shows stats, conversation replays with every tool call, escalations, orders placed on the site, and returns. Under **Products & stock**, the owner can **add or remove product photos** (compressed in the browser and stored in Supabase Storage) and **set stock levels**. A product at 0 shows as *Sold out*, can't be ordered, and the agent tells customers it's unavailable. The owner can upload a new policy document, which the agent can use immediately, and copy a **one-line `<script>` embed** for any website.
 
 ## Architecture
 
@@ -86,7 +86,7 @@ npm install
 copy .env.example .env
 ```
 
-1. **Database:** in Supabase open **SQL Editor → New query**, paste the contents of `supabase/migrations/001_init.sql` and click **Run**.
+1. **Database:** in Supabase open **SQL Editor → New query**, paste the contents of `supabase/migrations/001_init.sql` and click **Run**. Then do the same with `supabase/migrations/002_product_images_and_stock.sql`.
 2. **Keys:** fill in `.env`. Each value is explained in `.env.example`:
    - `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (**Project Settings → API Keys**)
    - `GOOGLE_GENERATIVE_AI_API_KEY` (https://aistudio.google.com/apikey)
@@ -108,6 +108,7 @@ Useful scripts:
 ```powershell
 npm run test:agent -- http://localhost:3000   # 8 multi-turn agent scenarios (all demo prompts + edge cases)
 npm run seed -- --no-docs                     # reset demo orders without re-embedding the docs
+npm run seed -- --no-docs --reset-stock       # also put stock back to the demo levels (photos are kept)
 npm run typecheck
 npm run build
 ```
@@ -122,6 +123,7 @@ src/components/store/         Product grid, order form (cash on delivery)
 src/app/api/orders/route.ts   Places a demo order (validated + priced on the server)
 src/app/api/chat/route.ts     The agent loop (streaming, tools, rate limit, logging)
 src/app/admin/                Owner dashboard (login, logs, escalations, uploads)
+src/app/admin/products/       Products & stock (photos, stock levels, sold out)
 src/lib/agent/tools.ts        The 5 tools and the business rules they enforce
 src/lib/agent/prompt.ts       The agent's instructions
 src/lib/llm.ts                The only file that knows about Gemini (models, fallback, embeddings)
@@ -144,7 +146,7 @@ docs/HOW_IT_WORKS.md          Plain-English walkthrough + likely interview quest
 - **Simple product search** (keyword scoring). Fine for 30 products. A large catalogue needs full-text or vector search.
 - **Rate limit by IP** (10 messages/day) protects the free tier but can affect people sharing one office network.
 - **Shared demo state.** If someone returns order #1037, it stays "already returned" for others until the nightly reset or the dashboard's **Reset demo orders** button.
-- **Demo checkout only.** Orders are cash on delivery with no payment, stock count or real shipping. Orders placed on the site are deleted by the nightly reset, and each visitor can place 5 a day.
+- **Demo checkout only.** Orders are cash on delivery with no payment or real shipping, and there is one stock count per product (not per size). Orders placed on the site are deleted by the nightly reset, but stock stays as the owner set it. Each visitor can place 5 orders a day.
 
 **Next steps**
 1. Send escalations to WhatsApp, email or a helpdesk (e.g. Zendesk) and notify the team.

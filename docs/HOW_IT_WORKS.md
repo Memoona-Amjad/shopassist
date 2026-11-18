@@ -80,7 +80,8 @@ Visitors can click any product and order it (size, quantity, name, phone, city, 
 - The browser only sends **which product and how many**. The **server** looks up the price and stock in the database, adds shipping (Rs 250 below Rs 5,000, otherwise free), and refuses sold-out items, wrong sizes, invalid phone numbers and cash-on-delivery orders above Rs 25,000.
 - The order gets the next order number (e.g. #1043) with status *processing*.
 - The confirmation screen has a **"Track it with ShopAssist"** button. It opens the chat with *"Where is my order #1043? Phone ends 4321"*, and the agent finds the order you just placed. This is a nice way to show the agent working on *live* data, not only the seed data.
-- Limits: 5 orders per visitor per day. All visitor orders are deleted by the nightly demo reset.
+- **Stock:** each order takes stock in **one atomic database step** (`take_stock`). If two people try to buy the last unit at the same moment, only one succeeds and the other gets a friendly "just sold out" message. If saving the order fails afterwards, the stock is put back.
+- Limits: 5 orders per visitor per day. All visitor orders are deleted by the nightly demo reset (stock is not reset, because the owner controls it).
 - The agent itself does **not** place orders. If a customer asks to buy, it tells them to click the product. Taking payment is a step we keep with the customer, on purpose.
 
 ## 7. The owner dashboard (`/admin`)
@@ -91,6 +92,10 @@ Visitors can click any product and order it (size, quantity, name, phone, city, 
 - **Escalations** with the agent's summary, and a "mark resolved" button.
 - **Conversation logs:** open any chat to replay every message and tool call.
 - **Upload a policy** (.md/.txt or pasted text). It is chunked, embedded and usable by the agent immediately.
+- **Products & stock** (`/admin/products`): add, replace or remove each product's **photo**, set the **stock** number, or use **Mark sold out** / **Restock**. Filters show low-stock items, sold-out items and products without a photo.
+  - Photos are shrunk in the browser (max 1200px, WebP) before upload, so uploads are fast, then stored in **Supabase Storage**.
+  - The store page is cached for speed. Every owner change "expires" the cache (Next.js `updateTag`), so the store shows the change on the next page load.
+  - At 0 stock a product shows **Sold out**, can't be ordered, and the agent's product search reports it as unavailable. Items with 5 or fewer left show **"Only N left"**.
 - **Reset demo orders** button, and the **one-line `<script>`** to add the chat to any website.
 
 ## 8. How to demo it in 3 minutes
@@ -150,4 +155,5 @@ A real hand-off (WhatsApp/email/helpdesk notification for escalations), OTP veri
 | Rate limiting | `src/lib/rate-limit.ts` |
 | Admin dashboard | `src/app/admin/page.tsx`, `src/app/admin/actions.ts` |
 | Ordering | `src/components/store/OrderDialog.tsx`, `src/lib/orders.ts`, `src/app/api/orders/route.ts` |
+| Products, photos, stock | `src/app/admin/products/`, `src/lib/products.ts`, `supabase/migrations/002_product_images_and_stock.sql` |
 | Demo data | `src/lib/seed-data.ts`, `data/policies/*.md` |

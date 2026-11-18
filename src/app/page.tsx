@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { DemoPanel } from "@/components/store/DemoPanel";
-import { ProductGrid } from "@/components/store/ProductGrid";
+import { Suspense } from "react";
+import { ProductGrid, ProductGridSkeleton } from "@/components/store/ProductGrid";
+import { getStoreProducts } from "@/lib/products";
 import { PRODUCTS } from "@/lib/seed-data";
 
-// The demo storefront. Products come from the same seed catalogue that is in the
-// database, so the page is static, fast and never breaks if the database is slow.
+// The demo storefront. Products (stock + photos) come from the database through a
+// cached loader; if the database is down it falls back to the built-in catalogue.
 // Orders placed here are checked and priced on the server (/api/orders).
+
+async function StoreProducts() {
+  return <ProductGrid products={await getStoreProducts()} />;
+}
 
 const TOOLS = [
   { icon: "📄", name: "searchPolicies", text: "Finds the answer in the store's own policy docs (RAG) and cites the source." },
@@ -84,7 +90,9 @@ export default function Home() {
       <DemoPanel />
 
       {/* Products (click one to order) */}
-      <ProductGrid />
+      <Suspense fallback={<ProductGridSkeleton />}>
+        <StoreProducts />
+      </Suspense>
 
       {/* How it works */}
       <section id="how" className="border-t border-stone-200 bg-[var(--cream)]">

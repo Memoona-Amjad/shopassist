@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 import type { UIMessage } from "ai";
@@ -23,22 +22,9 @@ const TOOL_ICONS: Record<string, string> = {
 // streams in inside <Suspense> (required by Next.js Cache Components).
 export default function AdminPage() {
   return (
-    <div className="flex flex-1 flex-col bg-stone-50">
-      <header className="border-b border-stone-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
-          <div className="flex items-baseline gap-3">
-            <Link href="/" className="font-serif text-xl text-[var(--brand)]">Lawn &amp; Loom</Link>
-            <span className="text-sm text-stone-500">Owner dashboard · ShopAssist</span>
-          </div>
-          <Link href="/" className="text-sm text-stone-600 hover:text-stone-900">← Back to store</Link>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6">
-        <Suspense fallback={<p className="text-sm text-stone-500">Loading dashboard…</p>}>
-          <AdminContent />
-        </Suspense>
-      </main>
-    </div>
+    <Suspense fallback={<p className="text-sm text-stone-500">Loading dashboard…</p>}>
+      <AdminContent />
+    </Suspense>
   );
 }
 

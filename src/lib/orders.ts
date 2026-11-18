@@ -34,7 +34,8 @@ export async function placeOrder(input: OrderInput) {
   const { data: product, error } = await db().from("products").select("*").eq("id", input.productId).maybeSingle();
   if (error) throw new Error(error.message);
   if (!product) throw new OrderError("This product no longer exists.");
-  if (!product.in_stock) throw new OrderError("Sorry, this product is sold out.");
+  if (!product.in_stock || product.stock <= 0) throw new OrderError("Sorry, this product is sold out.");
+  if (input.qty > product.stock) throw new OrderError(`Only ${product.stock} left. Please reduce the quantity.`);
   if (!(product.sizes as string[]).includes(input.size)) throw new OrderError("Please choose an available size.");
 
   const subtotal = product.price * input.qty;
@@ -58,6 +59,13 @@ export async function placeOrder(input: OrderInput) {
     delivered_at: null,
   };
 
+  // Take the stock first, in one atomic database step, so two buyers can never
+  // buy the last unit twice. If anything below fails, the stock is put back.
+  const { data: left, error: stockError } = await db().rpc("take_stock", { p_product_id: product.id, p_qty: input.qty });
+  if (stockError) throw new Error(stockError.message);
+  if (left === null) throw new OrderError("Sorry, that item just sold out. Please choose a smaller quantity or another product.");
+  const giveBack = () => db().rpc("give_back_stock", { p_product_id: product.id, p_qty: input.qty });
+
   // Next order number = highest + 1. If two people order at the same moment,
   // one insert fails on the primary key and simply retries with the next number.
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -68,7 +76,11 @@ export async function placeOrder(input: OrderInput) {
       const [minDays, maxDays] = deliveryWindow(input.city);
       return { orderId: id, total, phoneLast4: phone.slice(-4), deliveryDays: `${minDays}–${maxDays}` };
     }
-    if (insertError.code !== "23505") throw new Error(insertError.message); // 23505 = duplicate key
+    if (insertError.code !== "23505") {
+      await giveBack();
+      throw new Error(insertError.message);
+    } // 23505 = duplicate key: try the next number
   }
+  await giveBack();
   throw new Error("Could not create an order number. Please try again.");
 }
